@@ -6,14 +6,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
         
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y cmake lcov gcovr
+        sudo apt-get install -y cmake lcov python3-pip
+        pip install gcovr
         
     - name: Configure
       run: cmake -B build -DBUILD_TESTS=ON
@@ -25,22 +26,24 @@ jobs:
       run: |
         cd build
         ./tests
-        # Используем gcovr вместо lcov
-        gcovr -r .. \
+        gcovr --root .. \
+            --object-directory . \
             --exclude tests/ \
             --exclude third-party/ \
             --xml coverage.xml \
-            --html-details coverage.html
+            --html coverage.html \
+            --html-details
         
     - name: Upload to Coveralls
       uses: coverallsapp/github-action@v2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path-to-lcov: build/coverage.xml
-        flag-name: ${{ matrix.os }}
         
     - name: Upload coverage report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report
-        path: build/coverage.html
+        path: |
+          build/coverage.html
+          build/coverage.xml
