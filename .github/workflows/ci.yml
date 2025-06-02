@@ -14,7 +14,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y cmake lcov python3-pip
-        pip install cpp-coveralls
+        pip install gcovr
         
     - name: Configure
       run: cmake -B build -DBUILD_TESTS=ON
@@ -22,10 +22,11 @@ jobs:
     - name: Build
       run: cmake --build build
       
-    - name: Run tests and generate coverage
+    - name: Run tests and collect coverage
       run: |
         cd build
         ./tests
+        # Собираем покрытие только для наших исходников
         lcov --capture \
             --directory CMakeFiles/banking.dir/src \
             --directory CMakeFiles/tests.dir/tests \
@@ -36,22 +37,24 @@ jobs:
             '*/tests/*' \
             --output-file coverage.filtered.info
         genhtml coverage.filtered.info --output-directory coverage
+        # Генерируем отчет для Coveralls
+        gcovr --root .. \
+            --exclude tests/ \
+            --exclude third-party/ \
+            --xml coverage.xml \
+            --html coverage.html \
+            --html-details
         
     - name: Upload to Coveralls
-      run: |
-        coveralls \
-          --root .. \
-          --build-root build \
-          --exclude tests \
-          --exclude third-party \
-          -i "src/" \
-          --gcov-options '\-lp'
-      env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
-        COVERALLS_SERVICE_NAME: github
+      uses: coverallsapp/github-action@v2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        coveralls-token: ${{ secrets.COVERALLS_TOKEN }}
+        path-to-lcov: build/coverage.xml
+        base-path: ${{ github.workspace }}
         
     - name: Upload coverage report
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report
-        path: build/coverage
+        path: build/coverage.html

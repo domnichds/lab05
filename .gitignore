@@ -1,0 +1,19 @@
+# Сборка
+build/
+_build/
+
+# Покрытие
+*.gcda
+*.gcno
+coverage.info
+coverage.xml
+coverage.html
+*.lcov
+
+# Артефакты IDE
+.vscode/
+.idea/
+
+# Другое
+*.orig
+*.bak

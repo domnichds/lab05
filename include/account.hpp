@@ -1,13 +1,24 @@
-#ifndef ACCOUNT_HPP
-#define ACCOUNT_HPP
-
+#pragma once
 class Account {
-public:
-    virtual int GetBalance() const = 0;
-    virtual void ChangeBalance(int amount) = 0;
-    virtual void Lock() = 0;
-    virtual void Unlock() = 0;
-    virtual ~Account() = default;
-};
+ public:
+  Account(int id, int balance);
+  virtual ~Account();
 
-#endif
+  // Virtual to test.
+  virtual int GetBalance() const;
+
+  // Virtual to test.
+  virtual void ChangeBalance(int diff);
+
+  // Virtual to test.
+  virtual void Lock();
+
+  // Virtual to test.
+  virtual void Unlock();
+  int id() const { return id_; }
+
+ private:
+  int id_;
+  int balance_;
+  bool is_locked_;
+};

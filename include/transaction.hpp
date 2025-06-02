@@ -1,20 +1,22 @@
-#ifndef TRANSACTION_HPP
-#define TRANSACTION_HPP
+#pragma once
 
-#include "account.hpp"
+class Account;
 
 class Transaction {
-public:
-    Transaction();
-    void set_source(Account* account);
-    void set_target(Account* account);
-    void set_amount(int amount);
-    bool Execute();
+ public:
+  Transaction();
+  virtual ~Transaction();
 
-private:
-    Account* source_;
-    Account* target_;
-    int amount_;
+  bool Make(Account& from, Account& to, int sum);
+  int fee() const { return fee_; }
+  void set_fee(int fee) { fee_ = fee; }
+
+ private:
+  void Credit(Account& accout, int sum);
+  bool Debit(Account& accout, int sum);
+
+  // Virtual to test.
+  virtual void SaveToDataBase(Account& from, Account& to, int sum);
+
+  int fee_;
 };
-
-#endif
