@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 project(banking)
 
+# Добавляем пути к заголовкам Google Mock
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/third-party/gtest/googlemock/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/third-party/gtest/googletest/include
+)
+
 add_library(banking
     src/account.cpp
     src/transaction.cpp
@@ -18,6 +24,14 @@ if(BUILD_TESTS)
     
     add_executable(tests ${TEST_SOURCES})
     target_include_directories(tests PRIVATE include)
-    target_link_libraries(tests banking gtest_main)
+    
+    # Исправляем линковку
+    target_link_libraries(tests 
+        banking 
+        gtest 
+        gmock 
+        gtest_main
+    )
+    
     add_test(NAME banking_tests COMMAND tests)
 endif()
