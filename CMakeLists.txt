@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(banking)
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
 # Добавляем пути к заголовкам Google Mock
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/third-party/gtest/googlemock/include
@@ -31,6 +32,7 @@ if(BUILD_TESTS)
         gtest 
         gmock 
         gtest_main
+        --coverage
     )
     
     add_test(NAME banking_tests COMMAND tests)

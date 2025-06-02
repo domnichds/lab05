@@ -11,26 +11,36 @@ jobs:
         submodules: recursive
         
     - name: Install dependencies
-      run: sudo apt-get install -y cmake lcov
-      
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake lcov gcovr
+        
     - name: Configure
       run: cmake -B build -DBUILD_TESTS=ON
       
     - name: Build
       run: cmake --build build
       
-    - name: Run tests
-      run: cd build && ctest --output-on-failure
-      
-    - name: Generate coverage
+    - name: Run tests and collect coverage
       run: |
         cd build
-        lcov --capture --directory . --output-file coverage.info
-        lcov --remove coverage.info '/usr/*' '*/third-party/*' '*/tests/*' --output-file coverage.filtered.info
-        genhtml coverage.filtered.info --output-directory coverage
+        ./tests
+        # Используем gcovr вместо lcov
+        gcovr -r .. \
+            --exclude tests/ \
+            --exclude third-party/ \
+            --xml coverage.xml \
+            --html-details coverage.html
         
     - name: Upload to Coveralls
       uses: coverallsapp/github-action@v2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: build/coverage.filtered.info
+        path-to-lcov: build/coverage.xml
+        flag-name: ${{ matrix.os }}
+        
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: build/coverage.html
