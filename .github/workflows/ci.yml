@@ -1,60 +1,54 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-        
+
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y cmake lcov python3-pip
-        pip install gcovr
-        
+        sudo apt-get install -y cmake g++ lcov
+
     - name: Configure
-      run: cmake -B build -DBUILD_TESTS=ON
-      
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Coverage ../banking
+
     - name: Build
-      run: cmake --build build
-      
-    - name: Run tests and collect coverage
       run: |
         cd build
-        ./tests
-        # Собираем покрытие только для наших исходников
-        lcov --capture \
-            --directory CMakeFiles/banking.dir/src \
-            --directory CMakeFiles/tests.dir/tests \
-            --output-file coverage.info
-        lcov --remove coverage.info \
-            '/usr/*' \
-            '*/third-party/*' \
-            '*/tests/*' \
-            --output-file coverage.filtered.info
-        genhtml coverage.filtered.info --output-directory coverage
-        # Генерируем отчет для Coveralls
-        gcovr --root .. \
-            --exclude tests/ \
-            --exclude third-party/ \
-            --xml coverage.xml \
-            --html coverage.html \
-            --html-details
-        
-    - name: Upload to Coveralls
-      uses: coverallsapp/github-action@v2
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        coveralls-token: ${{ secrets.COVERALLS_TOKEN }}
-        path-to-lcov: build/coverage.xml
-        base-path: ${{ github.workspace }}
-        
-    - name: Upload coverage report
+        make
+
+    - name: Test
+      run: |
+        cd build
+        make test
+
+    - name: Generate coverage report
+      run: |
+        cd build
+        lcov --capture --directory . --output-file coverage.info --ignore-errors mismatch,unsupported,format,gcov,unused
+        lcov --extract coverage.info "*/banking/Account.cpp" "*/banking/Transaction.cpp" --output-file coverage.info
+        lcov --list coverage.info
+
+    - name: Upload coverage to Coveralls
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report
-        path: build/coverage.html
+        path: banking/build/coverage.info
+
+    - name: Upload coverage to Coveralls
+      uses: coverallsapp/github-action@v2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: build/coverage.info 

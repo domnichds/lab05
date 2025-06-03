@@ -1,10 +1,10 @@
-#include "transaction.hpp"
+#include "Transaction.h"
 
 #include <cassert>
 #include <iostream>
 #include <stdexcept>
 
-#include "account.hpp"
+#include "Account.h"
 
 namespace {
 // RAII
@@ -19,6 +19,9 @@ struct Guard {
 }  // namespace
 
 Transaction::Transaction() : fee_(1) {}
+
+Transaction::Transaction(int amount, const std::string& description)
+    : amount_(amount), description_(description), fee_(1) {}
 
 Transaction::~Transaction() {}
 
@@ -36,7 +39,7 @@ bool Transaction::Make(Account& from, Account& to, int sum) {
 
   Credit(to, sum);
 
-  bool success = Debit(to, sum + fee_);
+  bool success = Debit(from, sum + fee_);
   if (!success) to.ChangeBalance(-sum);
 
   SaveToDataBase(from, to, sum);
@@ -62,4 +65,12 @@ void Transaction::SaveToDataBase(Account& from, Account& to, int sum) {
   std::cout << "Balance " << from.id() << " is " << from.GetBalance()
             << std::endl;
   std::cout << "Balance " << to.id() << " is " << to.GetBalance() << std::endl;
+}
+
+int Transaction::GetAmount() const {
+    return amount_;
+}
+
+std::string Transaction::GetDescription() const {
+    return description_;
 }
